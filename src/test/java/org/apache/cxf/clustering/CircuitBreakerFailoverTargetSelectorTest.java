@@ -131,7 +131,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 	public void shouldFailoverTo2ndAddressAfterExceedingFailureThreshold() throws Exception {
 
 		circuitBreakerTargetSelector.setFailureThreshold(3);
-		circuitBreakerTargetSelector.setResetTimeout(100);
+		circuitBreakerTargetSelector.setResetTimeout(300);
 		circuitBreakerTargetSelector.setAddressList(asList("http://address1", "http://address2", "http://address3"));
 
 		Message message = sendRequestToFirstAvailableAddressAndForceFailure("/resourceABC");
@@ -186,7 +186,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		addresses.add("http://addressA");
 		addresses.add("http://addressB");
 		addresses.add("http://addressC");
-		circuitBreakerTargetSelector.setResetTimeout(50l);
+		circuitBreakerTargetSelector.setResetTimeout(200l);
 		circuitBreakerTargetSelector.setFailureThreshold(0);
 		circuitBreakerTargetSelector.setAddressList(asList("http://addressA", "http://addressB", "http://addressC"));
 
@@ -196,7 +196,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		assertSendingMessageTo(message, "http://addressB/endpointABC");
 		Message message2 = sendRequestToFirstAvailableAddress("/endpointDEF");
 		assertSendingMessageTo(message2, "http://addressB/endpointDEF");
-		Thread.sleep(150l);
+		Thread.sleep(250l);
 
 		// failback
 		Message message3 = sendRequestToFirstAvailableAddress("/endpointAAA");
