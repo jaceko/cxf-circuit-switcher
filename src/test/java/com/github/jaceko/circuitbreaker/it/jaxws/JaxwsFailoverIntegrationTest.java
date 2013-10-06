@@ -69,6 +69,7 @@ public class JaxwsFailoverIntegrationTest {
 
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setAddressList(asList("http://not-existing.com", NODE1_ENDPOINT_ADDRESS));
+		cbcFeature.setResetTimeout(100000);
 
 		Greeter greeterClient = createServiceClient(cbcFeature);
 
@@ -100,6 +101,7 @@ public class JaxwsFailoverIntegrationTest {
 		// setting failure threshold to 2 so it will retry first request to the
 		// 1st node
 		cbcFeature.setFailureThreshold(2);
+		cbcFeature.setResetTimeout(100000);
 
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
