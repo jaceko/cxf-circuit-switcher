@@ -44,8 +44,6 @@ public class JaxwsFailoverIntegrationTest {
 	private CircuitBreakerClusteringFeature createCircuitBreakerFeature() {
 		CircuitBreakerClusteringFeature cbff = new CircuitBreakerClusteringFeature();
 		cbff.setAddressList(asList(NODE1_ENDPOINT_ADDRESS, NODE2_ENDPOINT_ADDRESS));
-		cbff.setResetTimeout(100000);
-		cbff.setFailureThreshold(1);
 		return cbff;
 	}
 
@@ -83,6 +81,8 @@ public class JaxwsFailoverIntegrationTest {
 	public void shouldFailoverTo2ndNodeAfterTimeoutOn1stNode() {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
+		cbcFeature.setResetTimeout(100000);
+
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on the client
@@ -125,6 +125,8 @@ public class JaxwsFailoverIntegrationTest {
 	public void shouldContinueUsingNode2AfterFailover() throws SAXException, IOException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
+		cbcFeature.setResetTimeout(100000);
+
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node 1
@@ -190,6 +192,7 @@ public class JaxwsFailoverIntegrationTest {
 	public void shouldThrowExceptionAfterAllNodesFail() throws SAXException, IOException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
+		cbcFeature.setResetTimeout(100000);
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node1 (1st request)
@@ -215,6 +218,8 @@ public class JaxwsFailoverIntegrationTest {
 	public void shouldFailFastAfterAllNodesFail() throws SAXException, IOException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
+		cbcFeature.setResetTimeout(100000);
+
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node1 (1st request)
