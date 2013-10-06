@@ -163,7 +163,7 @@ public class JaxwsFailoverIntegrationTest {
 	public void shouldFailbackToFirstNodeAfterResetTimeout() throws InterruptedException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
-		long resetTimeout = 900;
+		long resetTimeout = 1300;
 		cbcFeature.setResetTimeout(resetTimeout);
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
