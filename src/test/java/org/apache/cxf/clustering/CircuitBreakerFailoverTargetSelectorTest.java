@@ -60,7 +60,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		ei.setTransportId(ENDPOINT_TRANSPORT_ID);
 		ep = new EndpointImpl(null, null, ei);
 		circuitBreakerTargetSelector.setEndpoint(ep);
-		circuitBreakerTargetSelector.setResetTimeout(100l);
+		circuitBreakerTargetSelector.setResetTimeout(200l);
 	}
 
 	@Test
