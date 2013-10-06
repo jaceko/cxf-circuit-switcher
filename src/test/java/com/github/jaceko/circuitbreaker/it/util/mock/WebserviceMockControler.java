@@ -1,11 +1,6 @@
 package com.github.jaceko.circuitbreaker.it.util.mock;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
 import java.io.IOException;
-
-import javax.ws.rs.core.Response;
 
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
 import org.w3c.dom.Document;
