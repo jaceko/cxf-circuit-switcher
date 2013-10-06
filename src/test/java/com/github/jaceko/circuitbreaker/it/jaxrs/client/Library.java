@@ -6,7 +6,7 @@ import javax.ws.rs.Path;
 import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Authors;
 import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Books;
 
-@Path("/mock/services/REST")
+@Path("/services/REST")
 public interface Library {
 	@GET
 	@Path("/books/endpoint")
