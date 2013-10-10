@@ -26,10 +26,10 @@ import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceOperation;
 public class JaxwsFailoverIntegrationTest {
 
 	private static final String NODE1_ENDPOINT_ADDRESS = "http://localhost:9090/mock/services/SOAP/hello-world/endpoint";
-	private static final String NODE2_ENDPOINT_ADDRESS = "http://localhost:9090/mock2/services/SOAP/hello-world/endpoint";
+	private static final String NODE2_ENDPOINT_ADDRESS = "http://localhost:9191/mock/services/SOAP/hello-world/endpoint";
 
-	private WebserviceMockControler node1Controller = new WebserviceMockControler("http://localhost:9090/mock");
-	private WebserviceMockControler node2Controller = new WebserviceMockControler("http://localhost:9090/mock2");
+	private WebserviceMockControler node1Controller = new WebserviceMockControler("http://localhost:9090");
+	private WebserviceMockControler node2Controller = new WebserviceMockControler("http://localhost:9191");
 
 	WebserviceOperation sayHiOperation = new WebserviceOperation("hello-world", "sayHi");
 
@@ -169,15 +169,13 @@ public class JaxwsFailoverIntegrationTest {
 
 		// causing timeout on node1 (1st request)
 		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
-		// setting up a response to 2nd request on node1
+
 		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah node1 speaking!"));
 
-		// setting up a response to 1st request on node2
 		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah node2 speaking!"));
 		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah ho node2 speaking!"));
 
-		// this request fails over to node 2 after two delivery attempts on node
-		// 1
+		// this request fails over to node 2 
 		assertThat(greeterClient.sayHi(), is("Heyah node2 speaking!"));
 		// this request goes directly to node2
 		assertThat(greeterClient.sayHi(), is("Heyah ho node2 speaking!"));
@@ -185,7 +183,7 @@ public class JaxwsFailoverIntegrationTest {
 		// waiting till failover reset timeout elapses
 		Thread.sleep(resetTimeout + 100);
 
-		// this request goes to node1
+		//failback, node1 is healthy again
 		assertThat(greeterClient.sayHi(), is("Heyah node1 speaking!"));
 
 	}
@@ -271,7 +269,7 @@ public class JaxwsFailoverIntegrationTest {
 	private Greeter createServiceClientWithTimeout(CircuitBreakerClusteringFeature cbcFeature, int timeout) {
 		Greeter serviceClient = createServiceClient(cbcFeature);
 		if (serviceClient instanceof BindingProvider) {
-			BindingProvider bindingProvider = (BindingProvider) serviceClient;// NOSONAR
+			BindingProvider bindingProvider = (BindingProvider) serviceClient;
 			bindingProvider.getRequestContext().put("javax.xml.ws.client.receiveTimeout", String.valueOf(timeout));
 			bindingProvider.getRequestContext().put("javax.xml.ws.client.connectionTimeout", String.valueOf(timeout));
 		} else {

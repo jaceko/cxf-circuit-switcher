@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path("/services/{service_type}/{service_name}/operations/{operation_id}")
+@Path("/mock/services/{service_type}/{service_name}/operations/{operation_id}")
 public interface MockService {
 
 	@POST

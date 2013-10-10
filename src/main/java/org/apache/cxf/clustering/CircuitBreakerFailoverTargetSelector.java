@@ -66,7 +66,6 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 			if (target != null && targetChanged(message, target)) {
 				setEndpoint(target);
 				message.put(Message.ENDPOINT_ADDRESS, target.getEndpointInfo().getAddress());
-				message.put(CONDUIT_COMPARE_FULL_URL, Boolean.TRUE);
 				overrideAddressProperty(invocation.getContext());
 				invocation.getContext().put(IS_SELECTED, "");
 			} else if (target == null) {
@@ -74,6 +73,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 			}
 		}
 
+		message.put(CONDUIT_COMPARE_FULL_URL, Boolean.TRUE);
 		return getSelectedConduit(message);
 	}
 
