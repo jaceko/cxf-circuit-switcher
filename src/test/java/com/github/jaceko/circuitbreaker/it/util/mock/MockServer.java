@@ -69,7 +69,6 @@ public class MockServer {
 		    	break;
 		    }
 		}
-		System.out.println("returning process");
 		return process;
 	}
 

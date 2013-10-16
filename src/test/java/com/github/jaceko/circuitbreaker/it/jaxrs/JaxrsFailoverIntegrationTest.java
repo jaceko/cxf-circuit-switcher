@@ -91,7 +91,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 	public void shouldFailbackToFirstNodeAfterResetTimeout() throws InterruptedException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
-		long resetTimeout = 1300;
+		long resetTimeout = 2000;
 		cbcFeature.setResetTimeout(resetTimeout);
 		Library library = createJaxrsClientWithTimeout(cbcFeature, 800);
 
