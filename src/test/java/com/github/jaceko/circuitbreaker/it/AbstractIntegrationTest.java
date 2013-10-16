@@ -1,4 +1,4 @@
-package com.github.jaceko.circuitbreaker.it.jaxrs;
+package com.github.jaceko.circuitbreaker.it;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.jaceko.circuitbreaker.it.util.mock.MockServer;
 
-public class AbstractIntegrationTest {
+public abstract class AbstractIntegrationTest {
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractIntegrationTest.class);
 
 	private static Process mockServerProcess1;

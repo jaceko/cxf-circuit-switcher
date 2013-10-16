@@ -19,7 +19,7 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.github.jaceko.circuitbreaker.it.jaxrs.AbstractIntegrationTest;
+import com.github.jaceko.circuitbreaker.it.AbstractIntegrationTest;
 import com.github.jaceko.circuitbreaker.it.jaxws.client.hello_world_soap_http.Greeter;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceMockControler;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceOperation;

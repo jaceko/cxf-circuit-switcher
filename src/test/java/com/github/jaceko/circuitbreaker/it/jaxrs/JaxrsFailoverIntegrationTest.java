@@ -18,6 +18,7 @@ import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.jaceko.circuitbreaker.it.AbstractIntegrationTest;
 import com.github.jaceko.circuitbreaker.it.jaxrs.client.Library;
 import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Authors;
 import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Books;
