@@ -1,7 +1,10 @@
 package com.github.jaceko.circuitbreaker.it.util.mock;
 
+import static java.text.MessageFormat.format;
+
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,22 +23,24 @@ public class MockServer {
 		soapRestMockWebApp.setContextPath("/mock");
 		jettyServer.setHandler(soapRestMockWebApp);
 	}
-	
+
 	public void start() throws Exception {
 		jettyServer.start();
 	}
-	
+
 	public void stop() throws Exception {
 		jettyServer.stop();
 		jettyServer.join();
 	}
-	
+
 	public static Process startNewProcess(String port) throws IOException {
 		List<String> argumentsList = new ArrayList<String>();
 		argumentsList.add("java");
 		argumentsList.add("-classpath");
 		argumentsList
-				.add(".;../jetty/jetty-all.jar;../jetty/javax.servlet-api.jar;../../src/test/resources/mock-config/");
+				.add(format(
+						".{0}../jetty/jetty-all.jar{0}../jetty/javax.servlet-api.jar{0}../../src/test/resources/mock-config/",
+						System.getProperty("path.separator")));
 
 		argumentsList.add("com.github.jaceko.circuitbreaker.it.util.mock.MockServer");
 		argumentsList.add(port);
@@ -51,7 +56,6 @@ public class MockServer {
 		return process;
 	}
 
-	
 	public static void main(String[] args) throws Exception {
 		MockServer mockServer = new MockServer(Integer.valueOf(args[0]));
 		mockServer.start();
