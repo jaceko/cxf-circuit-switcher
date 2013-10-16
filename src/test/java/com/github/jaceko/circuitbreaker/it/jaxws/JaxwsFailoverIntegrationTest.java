@@ -19,11 +19,12 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import com.github.jaceko.circuitbreaker.it.jaxrs.AbstractIntegrationTest;
 import com.github.jaceko.circuitbreaker.it.jaxws.client.hello_world_soap_http.Greeter;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceMockControler;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceOperation;
 
-public class JaxwsFailoverIntegrationTest {
+public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	private static final String NODE1_ENDPOINT_ADDRESS = "http://localhost:9090/mock/services/SOAP/hello-world/endpoint";
 	private static final String NODE2_ENDPOINT_ADDRESS = "http://localhost:9191/mock/services/SOAP/hello-world/endpoint";
@@ -49,8 +50,8 @@ public class JaxwsFailoverIntegrationTest {
 
 	@Before
 	public void init() {
-		node1Controller.soapOperation(sayHiOperation).init();
-		node2Controller.soapOperation(sayHiOperation).init();
+		node1Controller.webserviceOperation(sayHiOperation).init();
+		node2Controller.webserviceOperation(sayHiOperation).init();
 	}
 
 	@Test
@@ -59,7 +60,7 @@ public class JaxwsFailoverIntegrationTest {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		Greeter greeterClient = createServiceClient(cbcFeature);
 
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("How you doin"));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("How you doin"));
 
 		assertThat(greeterClient.sayHi(), is("How you doin"));
 	}
@@ -73,7 +74,7 @@ public class JaxwsFailoverIntegrationTest {
 
 		Greeter greeterClient = createServiceClient(cbcFeature);
 
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Whats up?"));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Whats up?"));
 
 		assertThat(greeterClient.sayHi(), is("Whats up?"));
 	}
@@ -87,9 +88,9 @@ public class JaxwsFailoverIntegrationTest {
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on the client
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heeey"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heeey"));
 
 		assertThat(greeterClient.sayHi(), is("Heeey"));
 
@@ -106,20 +107,20 @@ public class JaxwsFailoverIntegrationTest {
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// setting up timeouts of 2 first requests
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Ho"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Ho"));
 
 		assertThat(greeterClient.sayHi(), is("Ho"));
 
 		// this request fails over to 2nd node after exceeding threshold of 2
 		// attempts on on 1st node
-		Document recordedRequests1Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+		Document recordedRequests1Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 		assertThat(recordedRequests1Node, hasXPath("count(//sayHi)", equalTo("2")));
 
 		// 2nd node
-		Document recordedRequests2Node = node2Controller.soapOperation(sayHiOperation).recordedRequests();
+		Document recordedRequests2Node = node2Controller.webserviceOperation(sayHiOperation).recordedRequests();
 		assertThat(recordedRequests2Node, hasXPath("count(//sayHi)", equalTo("1")));
 	}
 
@@ -132,29 +133,29 @@ public class JaxwsFailoverIntegrationTest {
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node 1
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
 		// setting up 2 consecutive responses for node2
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Ha"));
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Ha ha"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Ha"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Ha ha"));
 
 		// this request fails over to node 2 after one delivery attempt to node
 		// 1
 		assertThat(greeterClient.sayHi(), is("Ha"));
 
-		Document recordedRequests1Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+		Document recordedRequests1Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 		assertThat(recordedRequests1Node, hasXPath("count(//sayHi)", equalTo("1")));
 
-		Document recordedRequests2Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+		Document recordedRequests2Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 		assertThat(recordedRequests2Node, hasXPath("count(//sayHi)", equalTo("1")));
 
 		// 2nd request goes directly to node 2
 		assertThat(greeterClient.sayHi(), is("Ha ha"));
 
-		recordedRequests1Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+		recordedRequests1Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 		assertThat(recordedRequests1Node, hasXPath("count(//sayHi)", equalTo("1")));
 
-		recordedRequests2Node = node2Controller.soapOperation(sayHiOperation).recordedRequests();
+		recordedRequests2Node = node2Controller.webserviceOperation(sayHiOperation).recordedRequests();
 		assertThat(recordedRequests2Node, hasXPath("count(//sayHi)", equalTo("2")));
 
 	}
@@ -168,14 +169,14 @@ public class JaxwsFailoverIntegrationTest {
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node1 (1st request)
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah node1 speaking!"));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah node1 speaking!"));
 
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah node2 speaking!"));
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah ho node2 speaking!"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah node2 speaking!"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heyah ho node2 speaking!"));
 
-		// this request fails over to node 2 
+		// this request fails over to node 2
 		assertThat(greeterClient.sayHi(), is("Heyah node2 speaking!"));
 		// this request goes directly to node2
 		assertThat(greeterClient.sayHi(), is("Heyah ho node2 speaking!"));
@@ -183,7 +184,7 @@ public class JaxwsFailoverIntegrationTest {
 		// waiting till failover reset timeout elapses
 		Thread.sleep(resetTimeout + 100);
 
-		//failback, node1 is healthy again
+		// failback, node1 is healthy again
 		assertThat(greeterClient.sayHi(), is("Heyah node1 speaking!"));
 
 	}
@@ -196,19 +197,19 @@ public class JaxwsFailoverIntegrationTest {
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node1 (1st request)
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 		// causing timeout on node2 (1st request)
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
 		// the request is sent to each node and returns an error because
 		// no more nodes are available
 		try {
 			greeterClient.sayHi();
 		} finally {
-			Document recordedRequests1Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+			Document recordedRequests1Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 			assertThat(recordedRequests1Node, hasXPath("count(//sayHi)", equalTo("1")));
 
-			Document recordedRequests2Node = node2Controller.soapOperation(sayHiOperation).recordedRequests();
+			Document recordedRequests2Node = node2Controller.webserviceOperation(sayHiOperation).recordedRequests();
 			assertThat(recordedRequests2Node, hasXPath("count(//sayHi)", equalTo("1")));
 
 		}
@@ -223,9 +224,9 @@ public class JaxwsFailoverIntegrationTest {
 		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node1 (1st request)
-		node1Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 		// causing timeout on node2 (1st request)
-		node2Controller.soapOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
 		// the request is sent to each node and returns an error because
 		// no more nodes are available
@@ -234,26 +235,26 @@ public class JaxwsFailoverIntegrationTest {
 		} catch (WebServiceException e) {
 
 		} finally {
-			Document recordedRequests1Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+			Document recordedRequests1Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 			assertThat(recordedRequests1Node, hasXPath("count(//sayHi)", equalTo("1")));
 
-			Document recordedRequests2Node = node2Controller.soapOperation(sayHiOperation).recordedRequests();
+			Document recordedRequests2Node = node2Controller.webserviceOperation(sayHiOperation).recordedRequests();
 			assertThat(recordedRequests2Node, hasXPath("count(//sayHi)", equalTo("1")));
 
 		}
-		
-		//reinitalising mocks to clear recorded requests
-		node1Controller.soapOperation(sayHiOperation).init();
-		node2Controller.soapOperation(sayHiOperation).init();
+
+		// reinitalising mocks to clear recorded requests
+		node1Controller.webserviceOperation(sayHiOperation).init();
+		node2Controller.webserviceOperation(sayHiOperation).init();
 
 		// next attempt fails fast, not sending any requests
 		try {
 			greeterClient.sayHi();
 		} finally {
-			Document recordedRequests1Node = node1Controller.soapOperation(sayHiOperation).recordedRequests();
+			Document recordedRequests1Node = node1Controller.webserviceOperation(sayHiOperation).recordedRequests();
 			assertThat(recordedRequests1Node, hasXPath("count(//sayHi)", equalTo("0")));
 
-			Document recordedRequests2Node = node2Controller.soapOperation(sayHiOperation).recordedRequests();
+			Document recordedRequests2Node = node2Controller.webserviceOperation(sayHiOperation).recordedRequests();
 			assertThat(recordedRequests2Node, hasXPath("count(//sayHi)", equalTo("0")));
 
 		}

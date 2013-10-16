@@ -24,7 +24,7 @@ import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Books;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceMockControler;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceOperation;
 
-public class JaxrsFailoverIntegrationTest {
+public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	private static final String NODE1_ADDRESS = "http://localhost:9090";
 	private static final String NODE2_ADDRESS = "http://localhost:9191";
@@ -51,17 +51,17 @@ public class JaxrsFailoverIntegrationTest {
 
 	@Before
 	public void init() {
-		node1Controller.soapOperation(booksGETOperation).init();
-		node2Controller.soapOperation(booksGETOperation).init();
-		node1Controller.soapOperation(authorsGETOperation).init();
-		node2Controller.soapOperation(authorsGETOperation).init();
+		node1Controller.webserviceOperation(booksGETOperation).init();
+		node2Controller.webserviceOperation(booksGETOperation).init();
+		node1Controller.webserviceOperation(authorsGETOperation).init();
+		node2Controller.webserviceOperation(authorsGETOperation).init();
 
 	}
 
 	@Test
 	public void shouldReturnResponsesReturnedByFirstNode() {
-		node1Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Fight Club"));
-		node1Controller.soapOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Chuck Palahniuk"));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Fight Club"));
+		node1Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Chuck Palahniuk"));
 
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 
@@ -73,8 +73,8 @@ public class JaxrsFailoverIntegrationTest {
 
 	@Test
 	public void shouldFailoverTo2ndNodeIfFirstNodeNotResponsing() {
-		node1Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Godfather"));
-		node1Controller.soapOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Mario Puzo"));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Godfather"));
+		node1Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Mario Puzo"));
 
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setAddressList(asList("http://nonexising", NODE1_ADDRESS));
@@ -96,16 +96,16 @@ public class JaxrsFailoverIntegrationTest {
 		Library library = createJaxrsClientWithTimeout(cbcFeature, 800);
 
 		// causing timeout on node1 (1st request)
-		node1Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withResponseDelaySec(1));
 
-		node1Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node1"));
-		node1Controller.soapOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano node1"));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node1"));
+		node1Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano node1"));
 
-		node2Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node2"));
-		node2Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node2"));
-		node2Controller.soapOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra3 node2"));
-		node2Controller.soapOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano node2"));
-		node2Controller.soapOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano2 node2"));
+		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node2"));
+		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node2"));
+		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra3 node2"));
+		node2Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano node2"));
+		node2Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano2 node2"));
 
 		// this request fails over to node 2
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node2"));

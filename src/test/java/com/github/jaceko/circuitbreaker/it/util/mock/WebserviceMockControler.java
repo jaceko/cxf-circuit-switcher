@@ -20,7 +20,7 @@ public class WebserviceMockControler {
 
 	}
 
-	public MockServiceOperation soapOperation(WebserviceOperation mockedOperation) {
+	public MockServiceOperation webserviceOperation(WebserviceOperation mockedOperation) {
 		return new MockServiceOperation("SOAP", mockServiceProxy, mockedOperation);
 	}
 
