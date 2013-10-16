@@ -4,7 +4,6 @@ import static java.text.MessageFormat.format;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +12,10 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 public class MockServer {
 	Server jettyServer;
+	private int port;
 
 	public MockServer(int port) {
+		this.port = port;
 		jettyServer = new Server(port);
 
 		WebAppContext soapRestMockWebApp = new WebAppContext();
@@ -25,7 +26,9 @@ public class MockServer {
 	}
 
 	public void start() throws Exception {
+		System.out.println("Starting server on port "+port);
 		jettyServer.start();
+		System.out.println("Server started on port "+port);
 	}
 
 	public void stop() throws Exception {
