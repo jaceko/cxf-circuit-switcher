@@ -56,7 +56,7 @@ public class MockServer {
 		processBuilder.directory(new File("target/test-classes"));
 		processBuilder.redirectErrorStream(true); // redirect error stream to
 													// output stream
-		processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+		//processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
 
 		Process process = processBuilder.start();
 		InputStream inputStream = process.getInputStream();
