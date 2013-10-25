@@ -14,7 +14,7 @@
 		<priority value="INFO" />
 	</category>
 
-	<category name="com.github.jaceko.circuitbreaker.it">
+	<category name="com.github.jaceko.circuitbreaker">
 		<priority value="INFO" />
 	</category>
 
