@@ -54,18 +54,22 @@ public class MockServer {
 		ProcessBuilder processBuilder = new ProcessBuilder(argumentsList.toArray(new String[argumentsList.size()]));
 		processBuilder.redirectErrorStream(true);
 		processBuilder.directory(new File("target/test-classes"));
-		processBuilder.redirectErrorStream(true); // redirect error stream to
-													// output stream
-		//processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-
+		
 		Process process = processBuilder.start();
 		InputStream inputStream = process.getInputStream();
 		BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
 		String line = null;
+		int lineCounter = 0;
 		while((line = in.readLine()) != null) {
+			lineCounter ++;
 		    System.out.println(line);
 		    if (line.contains("Server started")) {
 		    	in.close();
+		    	break;
+		    }
+		    if (lineCounter > 200) {
+		    	in.close();
+		    	System.out.println("Error starting mock server");
 		    	break;
 		    }
 		}
