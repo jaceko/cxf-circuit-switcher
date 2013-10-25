@@ -120,10 +120,10 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 		String alternateAddress = null;
 		while (iterator.hasNext()) {
 			Entry<String, Circuit> entry = iterator.next();
-			LOG.debug("node: {}, state: {}", entry.getKey(), entry.getValue());
+			LOG.info("node: {}, state: {}", entry.getKey(), entry.getValue());
 			if (entry.getValue().connectionAvailable()) {
 				alternateAddress = entry.getKey();
-				LOG.debug("selecting: {}, state: {},", entry.getKey(), entry.getValue());
+				LOG.info("selecting: {}, state: {},", entry.getKey(), entry.getValue());
 				break;
 			}
 
