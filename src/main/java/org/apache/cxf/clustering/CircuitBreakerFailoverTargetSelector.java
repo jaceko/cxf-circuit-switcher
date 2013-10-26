@@ -2,7 +2,7 @@ package org.apache.cxf.clustering;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,15 +25,17 @@ import org.slf4j.LoggerFactory;
 import com.github.jaceko.circuitbreaker.Circuit;
 
 public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector {
-	private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerFailoverTargetSelector.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(CircuitBreakerFailoverTargetSelector.class);
 
 	private static final String IS_SELECTED = "org.apache.cxf.clustering.CircuitBreakerTargetSelector.IS_SELECTED";
 
-	private Map<String, Circuit> circuitMap = new HashMap<String, Circuit>();
+	private Map<String, Circuit> circuitMap = Collections.emptyMap();
 	private long resetTimeout;
 	private int failureThreshold;
 
-	public CircuitBreakerFailoverTargetSelector(List<String> addressList, long resetTimeout, int failureThreshold) {
+	public CircuitBreakerFailoverTargetSelector(List<String> addressList, long resetTimeout,
+			int failureThreshold) {
 		this.resetTimeout = resetTimeout;
 		this.failureThreshold = failureThreshold;
 		if (addressList != null) {
@@ -79,7 +81,8 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 
 	private boolean targetChanged(Message message, Endpoint target) {
 		Object endpoinAddress = message.get(Message.ENDPOINT_ADDRESS);
-		return endpoinAddress == null || !endpoinAddress.toString().contains(target.getEndpointInfo().getAddress());
+		return endpoinAddress == null
+				|| !endpoinAddress.toString().contains(target.getEndpointInfo().getAddress());
 	}
 
 	/**
@@ -118,12 +121,13 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 		Set<Entry<String, Circuit>> entrySet = circuitMap.entrySet();
 		Iterator<Entry<String, Circuit>> iterator = entrySet.iterator();
 		String alternateAddress = null;
+		LOG.info("Checking available targets:");
 		while (iterator.hasNext()) {
 			Entry<String, Circuit> entry = iterator.next();
-			LOG.debug("node: {}, state: {}", entry.getKey(), entry.getValue());
+			LOG.info("Target: {}, Connection state: {}", entry.getKey(), entry.getValue());
 			if (entry.getValue().connectionAvailable()) {
 				alternateAddress = entry.getKey();
-				LOG.debug("selecting: {}, state: {},", entry.getKey(), entry.getValue());
+				LOG.info("Selecting: {}, Connection state: {},", entry.getKey(), entry.getValue());
 				break;
 			}
 
@@ -150,7 +154,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 		Conduit old = (Conduit) exchange.getOutMessage().remove(Conduit.class.getName());
 		if (requiresFailover(exchange)) {
 			onFailure(invocation.getContext());
-			LOG.debug("failover {}", invocation.getContext());
+			LOG.debug("Failover {}", invocation.getContext());
 			Endpoint failoverTarget = getFailoverTarget(exchange, invocation);
 			if (failoverTarget != null) {
 				setEndpoint(failoverTarget);
@@ -166,7 +170,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 			}
 		}
 		if (!failover) {
-			LOG.debug("FAILOVER_NOT_REQUIRED");
+			LOG.debug("Failover not required");
 			synchronized (this) {
 				inProgress.remove(key);
 			}
@@ -205,7 +209,8 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 					Thread.sleep(delay);
 				}
 				Map<String, Object> context = invocation.getContext();
-				retry.invoke(invocation.getBindingOperationInfo(), invocation.getParams(), context, exchange);
+				retry.invoke(invocation.getBindingOperationInfo(), invocation.getParams(), context,
+						exchange);
 			} catch (Exception e) {
 				if (exchange.get(Exception.class) != null) {
 					exchange.put(Exception.class, prevExchangeFault);
@@ -247,7 +252,8 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 	}
 
 	private String getAddress(Map<String, Object> context) {
-		Map<String, Object> requestContext = CastUtils.cast((Map<?, ?>) context.get(Client.REQUEST_CONTEXT));
+		Map<String, Object> requestContext = CastUtils.cast((Map<?, ?>) context
+				.get(Client.REQUEST_CONTEXT));
 
 		return (String) requestContext.get(Message.ENDPOINT_ADDRESS);
 	}
@@ -255,7 +261,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 	final void setAddressList(List<String> addressList) {
 		circuitMap = new LinkedHashMap<String, Circuit>();
 		for (String address : addressList) {
-			circuitMap.put(address, new Circuit(this.failureThreshold, this.resetTimeout));
+			circuitMap.put(address, new Circuit(address, this.failureThreshold, this.resetTimeout));
 		}
 	}
 
