@@ -90,12 +90,34 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		// causing timeout on the client
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
 
-		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heeey"));
+		node2Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heeey node 2"));
 
-		assertThat(greeterClient.sayHi(), is("Heeey"));
+		assertThat(greeterClient.sayHi(), is("Heeey node 2"));
 
 	}
 
+	@Test
+	public void shouldContinueUsingFirstNodeIfFailureThresholdNotExceeded() {
+		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		cbcFeature.setFailureThreshold(3);
+		cbcFeature.setResetTimeout(100000);
+
+		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+
+		// causing two timeouts on the client
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
+
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heeey node 1"));
+		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("Heeey2 node 1"));
+		
+		assertThat(greeterClient.sayHi(), is("Heeey node 1"));
+		
+		assertThat(greeterClient.sayHi(), is("Heeey2 node 1"));
+
+	}
+
+	
 	@Test
 	public void shouldFailoverToSecondNodeAfterExceedingFailureThreshold() throws SAXException, IOException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
