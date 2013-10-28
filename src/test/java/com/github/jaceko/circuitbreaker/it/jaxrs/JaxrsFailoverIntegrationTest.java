@@ -6,22 +6,16 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.lang.reflect.Proxy;
-
 import org.apache.cxf.clustering.CircuitBreakerClusteringFeature;
 import org.apache.cxf.jaxrs.client.ClientConfiguration;
-import org.apache.cxf.jaxrs.client.ClientProxyImpl;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
-import org.apache.cxf.transport.http.HTTPConduit;
-import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.jaceko.circuitbreaker.it.AbstractIntegrationTest;
 import com.github.jaceko.circuitbreaker.it.jaxrs.client.Library;
-import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Authors;
-import com.github.jaceko.circuitbreaker.it.jaxrs.client.dto.Books;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceMockControler;
 import com.github.jaceko.circuitbreaker.it.util.mock.WebserviceOperation;
 
@@ -74,17 +68,40 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test
 	public void shouldFailoverTo2ndNodeIfFirstNodeNotResponsing() {
-		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Godfather"));
-		node1Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Mario Puzo"));
+		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Godfather"));
+		node2Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Mario Puzo"));
 
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
-		cbcFeature.setAddressList(asList("http://nonexising", NODE1_ADDRESS));
+		cbcFeature.setAddressList(asList("http://nonexising", NODE2_ADDRESS));
 		cbcFeature.setResetTimeout(100000);
 
 		Library library = createJaxrsClient(cbcFeature);
 
 		assertThat(library.getAllAuthors().getAuthors().get(0).getName(), is("Mario Puzo"));
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Godfather"));
+
+	}
+	
+	@Test
+	@Ignore
+	public void shouldContinueUsingFirstNodeIfFailureThhresholdNotExceeded() throws InterruptedException {
+		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		cbcFeature.setFailureThreshold(3);
+		cbcFeature.setResetTimeout(100000);
+
+		Library library = createJaxrsClient(cbcFeature);
+
+		// causing timeout on node1 (two first requests)
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out1").withResponseDelaySec(2));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node1"));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out2").withResponseDelaySec(2));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node1"));
+		
+		setClientTimeout(library, 800);
+		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node1"));
+		setClientTimeout(library, 200);
+		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra2 node1"));
+
 
 	}
 
@@ -121,24 +138,6 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		assertThat(library.getAllAuthors().getAuthors().get(0).getName(), is("Roberto Saviano node1"));
 	}
 
-	@Test
-	public void testFaiover() {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
-		cbcFeature.setResetTimeout(100000);
-
-		Library library = createJaxrsClient(cbcFeature);
-
-		Authors allAuthors = library.getAllAuthors();
-		assertThat(allAuthors.getAuthors().size(), is(1));
-		assertThat(allAuthors.getAuthors().get(0).getName(), is("Karl May"));
-
-		library.getAllAuthors();
-
-		Books allBooks = library.getAllBooks();
-		assertThat(allBooks.getBooks().size(), is(2));
-		assertThat(allBooks.getBooks().get(1).getTitle(), is("Winnetou"));
-	}
-
 	private Library createJaxrsClient(CircuitBreakerClusteringFeature cbcFeature) {
 		bean.setFeatures(asList(cbcFeature));
 		Library library = bean.create(Library.class);
@@ -147,15 +146,15 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	private Library createJaxrsClientWithTimeout(CircuitBreakerClusteringFeature cbcFeature, int timeout) {
 		Library library = createJaxrsClient(cbcFeature);
-		ClientProxyImpl clientProxyImpl = (ClientProxyImpl) Proxy.getInvocationHandler(library);
-		ClientConfiguration config = WebClient.getConfig(clientProxyImpl);
-		HTTPConduit http = (HTTPConduit) config.getConduit();
-		HTTPClientPolicy httpClientPolicy = new HTTPClientPolicy();
-		httpClientPolicy.setConnectionTimeout(timeout);
-		httpClientPolicy.setReceiveTimeout(timeout);
-		http.setClient(httpClientPolicy);
+		setClientTimeout(library, timeout);
 
 		return library;
+	}
+
+	private void setClientTimeout(Library library, int timeout) {
+		
+		ClientConfiguration config = WebClient.getConfig(library);
+		config.getHttpConduit().getClient().setReceiveTimeout(timeout);
 	}
 
 }
