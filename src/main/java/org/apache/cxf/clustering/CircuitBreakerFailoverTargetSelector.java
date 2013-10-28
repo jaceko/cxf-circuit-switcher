@@ -96,6 +96,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 	 * 
 	 * 
 	 */
+	@Override
 	protected Endpoint getFailoverTarget(Exchange exchange, InvocationContext invocation) {
 		Endpoint failoverTarget = getAvailableTarget();
 		if (failoverTarget != null) {
@@ -221,6 +222,11 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 			}
 		}
 		return failover;
+	}
+	
+	@Override
+	protected long getDelayBetweenRetries() {
+		return 0;
 	}
 
 	protected InvocationContext getInvocation(InvocationKey key) {
