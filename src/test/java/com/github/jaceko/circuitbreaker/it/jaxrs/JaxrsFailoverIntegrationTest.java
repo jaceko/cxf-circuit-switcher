@@ -81,7 +81,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 	}
 	
 	@Test
-	public void shouldContinueUsingFirstNodeIfFailureThhresholdNotExceeded() throws InterruptedException {
+	public void shouldRetryAndContinueUsingFirstNodeIfFailureThresholdNotExceeded() throws InterruptedException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
@@ -97,11 +97,35 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node1"));
 		
+		//retries twice and finally gets successful response from node1
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node1"));
+		
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra2 node1"));
 
 
 	}
+	
+	@Test
+	public void shouldReturnDelayedResponseIfReceiveTimeoutNotExceeded() throws InterruptedException {
+		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		cbcFeature.setResetTimeout(100000);
+		//setting receive timeout to 1.5 sec.
+		cbcFeature.setReceiveTimeout(1500l);
+		
+
+		Library library = createJaxrsClient(cbcFeature);
+
+		// delaying response for 1 sec.
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Delayed response node1").withResponseDelaySec(1));
+		
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("2nd response node1"));
+		
+		//retries twice and finally gets successful response from node1
+		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Delayed response node1"));
+		
+
+	}
+
 	
 	@Test
 	public void shouldDiscardFirstNodeIfFailureThresholdExceeded() throws InterruptedException {
@@ -120,11 +144,11 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		
 		
 		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node2"));
-		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node2"));
+		node2Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano node2"));
 
 		
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node2"));
-		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra2 node2"));
+		assertThat(library.getAllAuthors().getAuthors().get(0).getName(), is("Roberto Saviano node2"));
 
 
 	}
