@@ -7,11 +7,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import org.apache.cxf.clustering.CircuitBreakerClusteringFeature;
-import org.apache.cxf.jaxrs.client.ClientConfiguration;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
-import org.apache.cxf.jaxrs.client.WebClient;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.jaceko.circuitbreaker.it.AbstractIntegrationTest;
@@ -74,6 +71,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setAddressList(asList("http://nonexising", NODE2_ADDRESS));
 		cbcFeature.setResetTimeout(100000);
+		
 
 		Library library = createJaxrsClient(cbcFeature);
 
@@ -83,24 +81,50 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 	}
 	
 	@Test
-	@Ignore
 	public void shouldContinueUsingFirstNodeIfFailureThhresholdNotExceeded() throws InterruptedException {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setReceiveTimeout(800l);
+		
 
 		Library library = createJaxrsClient(cbcFeature);
 
 		// causing timeout on node1 (two first requests)
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out1").withResponseDelaySec(2));
-		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node1"));
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out2").withResponseDelaySec(2));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node1"));
+		
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node1"));
 		
-		setClientTimeout(library, 800);
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node1"));
-		setClientTimeout(library, 200);
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra2 node1"));
+
+
+	}
+	
+	@Test
+	public void shouldDiscardFirstNodeIfFailureThresholdExceeded() throws InterruptedException {
+		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		cbcFeature.setFailureThreshold(3);
+		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setReceiveTimeout(800l);
+		
+
+		Library library = createJaxrsClient(cbcFeature);
+
+		// causing timeout on node1 (two first requests)
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out1").withResponseDelaySec(2));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out2").withResponseDelaySec(2));
+		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out3").withResponseDelaySec(2));
+		
+		
+		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node2"));
+		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node2"));
+
+		
+		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node2"));
+		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra2 node2"));
 
 
 	}
@@ -111,7 +135,8 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		cbcFeature.setFailureThreshold(1);
 		long resetTimeout = 2000;
 		cbcFeature.setResetTimeout(resetTimeout);
-		Library library = createJaxrsClientWithTimeout(cbcFeature, 800);
+		cbcFeature.setReceiveTimeout(800l);
+		Library library = createJaxrsClient(cbcFeature);
 
 		// causing timeout on node1 (1st request)
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withResponseDelaySec(1));
@@ -144,17 +169,5 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		return library;
 	}
 
-	private Library createJaxrsClientWithTimeout(CircuitBreakerClusteringFeature cbcFeature, int timeout) {
-		Library library = createJaxrsClient(cbcFeature);
-		setClientTimeout(library, timeout);
-
-		return library;
-	}
-
-	private void setClientTimeout(Library library, int timeout) {
-		
-		ClientConfiguration config = WebClient.getConfig(library);
-		config.getHttpConduit().getClient().setReceiveTimeout(timeout);
-	}
-
+	
 }

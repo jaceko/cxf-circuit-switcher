@@ -12,10 +12,12 @@ public class CircuitBreakerClusteringFeature extends FailoverFeature {
 	private List<String> addressList;
 	private long resetTimeout;
 	private int failureThreshold;
+	private Long receiveTimeout;
 
 	@Override
 	public FailoverTargetSelector getTargetSelector() {
-		return new CircuitBreakerFailoverTargetSelector(addressList, resetTimeout, failureThreshold);
+		return new CircuitBreakerFailoverTargetSelector(addressList, resetTimeout,
+				failureThreshold, receiveTimeout);
 	}
 
 	@Override
@@ -37,4 +39,7 @@ public class CircuitBreakerClusteringFeature extends FailoverFeature {
 		this.failureThreshold = failureThreshold;
 	}
 
+	public void setReceiveTimeout(Long receiveTimeout) {
+		this.receiveTimeout = receiveTimeout;
+	}
 }

@@ -9,7 +9,6 @@ import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 
-import javax.xml.ws.BindingProvider;
 import javax.xml.ws.WebServiceException;
 
 import org.apache.cxf.clustering.CircuitBreakerClusteringFeature;
@@ -83,9 +82,10 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 	public void shouldFailoverTo2ndNodeAfterTimeoutOn1stNode() {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
-		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setResetTimeout(100000l);
+		cbcFeature.setReceiveTimeout(800l);
 
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// causing timeout on the client
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -101,8 +101,9 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setReceiveTimeout(800l);
 
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// causing two timeouts on the client
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -125,8 +126,9 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		// 1st node
 		cbcFeature.setFailureThreshold(2);
 		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setReceiveTimeout(800l);
 
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// setting up timeouts of 2 first requests
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -151,8 +153,9 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setReceiveTimeout(800l);
 
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// causing timeout on node 1
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -188,7 +191,9 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		cbcFeature.setFailureThreshold(1);
 		long resetTimeout = 1300;
 		cbcFeature.setResetTimeout(resetTimeout);
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		cbcFeature.setReceiveTimeout(800l);
+		
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// causing timeout on node1 (1st request)
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -216,7 +221,9 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000);
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		cbcFeature.setReceiveTimeout(800l);
+		
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// causing timeout on node1 (1st request)
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -242,8 +249,9 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000);
+		cbcFeature.setReceiveTimeout(800l);
 
-		Greeter greeterClient = createServiceClientWithTimeout(cbcFeature, 800);
+		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		// causing timeout on node1 (1st request)
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseDelaySec(1));
@@ -286,19 +294,6 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 	private Greeter createServiceClient(CircuitBreakerClusteringFeature cbcFeature) {
 		bean.setFeatures(asList(cbcFeature));
 		Greeter serviceClient = bean.create(Greeter.class);
-		return serviceClient;
-	}
-
-	private Greeter createServiceClientWithTimeout(CircuitBreakerClusteringFeature cbcFeature, int timeout) {
-		Greeter serviceClient = createServiceClient(cbcFeature);
-		if (serviceClient instanceof BindingProvider) {
-			BindingProvider bindingProvider = (BindingProvider) serviceClient;
-			bindingProvider.getRequestContext().put("javax.xml.ws.client.receiveTimeout", String.valueOf(timeout));
-			bindingProvider.getRequestContext().put("javax.xml.ws.client.connectionTimeout", String.valueOf(timeout));
-		} else {
-			throw new IllegalStateException("Unable to access CXF request context while initialising client");
-		}
-
 		return serviceClient;
 	}
 

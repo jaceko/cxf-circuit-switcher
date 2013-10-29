@@ -40,6 +40,7 @@ import org.apache.cxf.service.model.BindingOperationInfo;
 import org.apache.cxf.service.model.EndpointInfo;
 import org.apache.cxf.transport.ConduitInitiator;
 import org.apache.cxf.transport.ConduitInitiatorManager;
+import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transport.http.HTTPTransportFactory;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +51,8 @@ import org.mockito.ArgumentCaptor;
 public class CircuitBreakerFailoverTargetSelectorTest {
 	private static final String ENDPOINT_TRANSPORT_ID = "http://cxf.apache.org/transports/http";
 
-	CircuitBreakerFailoverTargetSelector circuitBreakerTargetSelector = new CircuitBreakerFailoverTargetSelector(null, 0, 0); 
+	CircuitBreakerFailoverTargetSelector circuitBreakerTargetSelector = new CircuitBreakerFailoverTargetSelector(
+			null, 0, 0, null);
 	private Retryable client;
 	private Endpoint ep;
 
@@ -65,8 +67,8 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 
 	@Test
 	public void shouldRequireFailoverWhereIOExceptionHasBeenThrown() {
-		circuitBreakerTargetSelector = new CircuitBreakerFailoverTargetSelector(null, 0, 0);
-		
+		circuitBreakerTargetSelector = new CircuitBreakerFailoverTargetSelector(null, 0, 0, null);
+
 		Exchange exchange = new ExchangeImpl();
 		Message message = new SoapMessage(Soap11.getInstance());
 		exchange.setOutMessage(message);
@@ -132,7 +134,8 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 
 		circuitBreakerTargetSelector.setFailureThreshold(3);
 		circuitBreakerTargetSelector.setResetTimeout(300);
-		circuitBreakerTargetSelector.setAddressList(asList("http://address1", "http://address2", "http://address3"));
+		circuitBreakerTargetSelector.setAddressList(asList("http://address1", "http://address2",
+				"http://address3"));
 
 		Message message = sendRequestToFirstAvailableAddressAndForceFailure("/resourceABC");
 		assertSendingMessageTo(message, "http://address1/resourceABC");
@@ -188,7 +191,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		addresses.add("http://addressC");
 		circuitBreakerTargetSelector.setResetTimeout(200l);
 		circuitBreakerTargetSelector.setFailureThreshold(0);
-		circuitBreakerTargetSelector.setAddressList(asList("http://addressA", "http://addressB", "http://addressC"));
+		circuitBreakerTargetSelector.setAddressList(addresses);
 
 		sendRequestToFirstAvailableAddressAndForceFailure("/endpointCBA");
 
@@ -203,25 +206,40 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		assertSendingMessageTo(message3, "http://addressA/endpointAAA");
 
 	}
+
+	@Test
+	public void shouldSetReceiveTimeoutOnConduit() {
+		List<String> addresses = new ArrayList<String>();
+		addresses.add("http://addressA");
+		circuitBreakerTargetSelector.setAddressList(addresses);
+		long receiveTimeout = 500l;
+		circuitBreakerTargetSelector.setReceiveTimeout(receiveTimeout);
+
+		HTTPConduit conduit = (HTTPConduit) circuitBreakerTargetSelector.selectConduit(messageTo(
+				"http://abc", ""));
+		assertThat(conduit.getClient().getReceiveTimeout(), is(receiveTimeout));
+		
+	}
 	
+
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
-	
 	@Test
 	public void shouldThrowExceptionIfNoMoreNodesToFailover() {
-		
+
 		circuitBreakerTargetSelector.setFailureThreshold(0);
 		circuitBreakerTargetSelector.setResetTimeout(200);
-		
+
 		circuitBreakerTargetSelector.setAddressList(asList("http://addressA", "http://addressB"));
-		
+
 		Message message = sendRequestToFirstAvailableAddressAndForceFailure("/endpointAAA");
 		assertSendingMessageTo(message, "http://addressA/endpointAAA");
-		
+
 		Message message2 = sendRequestToFirstAvailableAddressAndForceFailure("/endpointAAA");
 		assertSendingMessageTo(message2, "http://addressB/endpointAAA");
-		
+
 		thrown.expect(Fault.class);
 		thrown.expectCause(isA(IOException.class));
 		sendRequestToFirstAvailableAddressAndForceFailure("/endpointAAA");
@@ -230,7 +248,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 	private Message sendRequestToFirstAvailableAddressAndForceFailure(String requestPath) {
 		Message message = messageTo("http://originalAddress", requestPath);
 		message.put(Exception.class, new IOException());
-		
+
 		circuitBreakerTargetSelector.selectConduit(message);
 		circuitBreakerTargetSelector.complete(message.getExchange());
 		return message;
@@ -249,7 +267,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		message.put(Message.ENDPOINT_ADDRESS, requestURL);
 		message.put(Message.BASE_PATH, requestBaseURL);
 		message.put(Message.REQUEST_URI, requestURL);
-		
+
 		HashMap<String, Object> ctx = new HashMap<String, Object>();
 		ctx.put(Client.REQUEST_CONTEXT, new HashMap<String, Object>());
 		message.put(Message.INVOCATION_CONTEXT, ctx);
@@ -273,11 +291,11 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		Endpoint endpointMock = mock(Endpoint.class);
 		when(endpointMock.getEndpointInfo()).thenReturn(ei);
 		exchange.put(Endpoint.class, endpointMock);
-		
+
 		message.setExchange(exchange);
 		message.setContent(List.class, new ArrayList<String>());
 		circuitBreakerTargetSelector.prepare(message);
-		
+
 		InvocationKey key = new InvocationKey(exchange);
 		InvocationContext invocation = circuitBreakerTargetSelector.getInvocation(key);
 
@@ -285,7 +303,6 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 		invocation.getContext().put("org.apache.cxf.request.uri", requestPath);
 		return message;
 	}
-
 
 	private Exchange exchange(Message message) {
 		Exchange exchange = new ExchangeImpl();
@@ -304,8 +321,8 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 	private void verifyRertyToNode(String address) throws Exception {
 
 		ArgumentCaptor<Map> requestContextCaptor = ArgumentCaptor.forClass(Map.class);
-		verify(client).invoke(any(BindingOperationInfo.class), any(Object[].class), requestContextCaptor.capture(),
-				any(Exchange.class));
+		verify(client).invoke(any(BindingOperationInfo.class), any(Object[].class),
+				requestContextCaptor.capture(), any(Exchange.class));
 		Map requestContect = (Map) requestContextCaptor.getValue().get(Client.REQUEST_CONTEXT);
 		assertThat((String) requestContect.get(Message.ENDPOINT_ADDRESS), is(address));
 

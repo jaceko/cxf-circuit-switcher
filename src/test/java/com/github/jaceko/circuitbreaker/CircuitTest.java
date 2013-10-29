@@ -77,7 +77,7 @@ public class CircuitTest {
 
 		assertThat(
 				circuit.toString(),
-				is("Circuit [circuitState=CircuitClosed [failureCount=0], address=http://someUrl, failureThreshold=3, resetTimeout=50]"));
+				is("Circuit [address=http://someUrl, state=CircuitClosed [failureCount=0], failureThreshold=3, resetTimeout=50]"));
 
 	}
 
@@ -90,11 +90,11 @@ public class CircuitTest {
 		circuit.handleFailedConnection();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [circuitState=CircuitClosed [failureCount=1], address=http://someUrl, failureThreshold=3, resetTimeout=50]"));
+				is("Circuit [address=http://someUrl, state=CircuitClosed [failureCount=1], failureThreshold=3, resetTimeout=50]"));
 		circuit.handleSuccesfullConnection();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [circuitState=CircuitClosed [failureCount=0], address=http://someUrl, failureThreshold=3, resetTimeout=50]"));
+				is("Circuit [address=http://someUrl, state=CircuitClosed [failureCount=0], failureThreshold=3, resetTimeout=50]"));
 
 	}
 
@@ -106,7 +106,7 @@ public class CircuitTest {
 		circuit = new Circuit(address, failureThreshold, resetTimeout);
 		circuit.handleFailedConnection();
 		circuit.handleFailedConnection();
-		assertThat(circuit.toString(), containsString("Circuit [circuitState=CircuitOpen"));
+		assertThat(circuit.toString(), containsString("Circuit [address=http://someUrl, state=CircuitOpen"));
 
 	}
 
@@ -122,11 +122,11 @@ public class CircuitTest {
 		circuit.connectionAvailable();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [circuitState=CircuitHalfOpen, address=http://someUrlABC, failureThreshold=2, resetTimeout=50]"));
+				is("Circuit [address=http://someUrlABC, state=CircuitHalfOpen, failureThreshold=2, resetTimeout=50]"));
 		circuit.handleSuccesfullConnection();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [circuitState=CircuitClosed [failureCount=0], address=http://someUrlABC, failureThreshold=2, resetTimeout=50]"));
+				is("Circuit [address=http://someUrlABC, state=CircuitClosed [failureCount=0], failureThreshold=2, resetTimeout=50]"));
 
 	}
 
