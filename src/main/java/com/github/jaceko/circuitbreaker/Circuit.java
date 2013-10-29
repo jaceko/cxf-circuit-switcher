@@ -10,10 +10,10 @@ public class Circuit {
 	private final int failureThreshold;
 	private final long resetTimeout;
 	private final AtomicReference<CircuitState> circuitState = new AtomicReference<CircuitState>();
-	private final String address;
+	private final String targetAddress;
 
-	public Circuit(String address, int failureThreshold, long resetTimeout) {
-		this.address = address;
+	public Circuit(String targetAddress, int failureThreshold, long resetTimeout) {
+		this.targetAddress = targetAddress;
 		this.failureThreshold = failureThreshold;
 		this.resetTimeout = resetTimeout;
 		circuitState.set(new CircuitClosed());
@@ -54,14 +54,14 @@ public class Circuit {
 		LOG.info("Breaker reset attempt, {}", this.toString());
 	}
 
-	public String getAddress() {
-		return address;
+	public String getTargetAddress() {
+		return targetAddress;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Circuit [address=").append(address).append(", state=")
+		builder.append("Circuit [targetAddress=").append(targetAddress).append(", state=")
 				.append(circuitState.get()).append(", failureThreshold=").append(failureThreshold)
 				.append(", resetTimeout=").append(resetTimeout).append("]");
 		return builder.toString();
@@ -71,7 +71,7 @@ public class Circuit {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((address == null) ? 0 : address.hashCode());
+		result = prime * result + ((targetAddress == null) ? 0 : targetAddress.hashCode());
 		return result;
 	}
 
@@ -84,10 +84,10 @@ public class Circuit {
 		if (getClass() != obj.getClass())
 			return false;
 		Circuit other = (Circuit) obj;
-		if (address == null) {
-			if (other.address != null)
+		if (targetAddress == null) {
+			if (other.targetAddress != null)
 				return false;
-		} else if (!address.equals(other.address))
+		} else if (!targetAddress.equals(other.targetAddress))
 			return false;
 		return true;
 	}

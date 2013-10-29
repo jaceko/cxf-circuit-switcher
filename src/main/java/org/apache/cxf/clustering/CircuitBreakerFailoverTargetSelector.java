@@ -136,7 +136,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 			Circuit target = iterator.next();
 			LOG.info("Target: {}", target);
 			if (target.connectionAvailable()) {
-				alternateAddress = target.getAddress();
+				alternateAddress = target.getTargetAddress();
 				LOG.info("Selecting: {}", target);
 				break;
 			}
@@ -249,7 +249,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 	private Circuit findCircuit(String address) {
 		Circuit foundCircuit = null;
 		for (Circuit circuit : circuits) {
-			if (address.contains(circuit.getAddress())) {
+			if (address.contains(circuit.getTargetAddress())) {
 				foundCircuit = circuit;
 				break;
 			}

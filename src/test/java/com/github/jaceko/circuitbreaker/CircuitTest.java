@@ -70,63 +70,63 @@ public class CircuitTest {
 
 	@Test
 	public void shouldReturnCirucitsInitialRepresenation() {
-		String address = "http://someUrl";
+		String targetAddress = "http://someUrl";
 		long resetTimeout = 50;
 		int failureThreshold = 3;
-		circuit = new Circuit(address, failureThreshold, resetTimeout);
+		circuit = new Circuit(targetAddress, failureThreshold, resetTimeout);
 
 		assertThat(
 				circuit.toString(),
-				is("Circuit [address=http://someUrl, state=CircuitClosed [failureCount=0], failureThreshold=3, resetTimeout=50]"));
+				is("Circuit [targetAddress=http://someUrl, state=CircuitClosed [failureCount=0], failureThreshold=3, resetTimeout=50]"));
 
 	}
 
 	@Test
 	public void shouldReturnCirucitsRepresenationAfterFirstFailure() {
-		String address = "http://someUrl";
+		String targetAddress = "http://someUrl";
 		long resetTimeout = 50;
 		int failureThreshold = 3;
-		circuit = new Circuit(address, failureThreshold, resetTimeout);
+		circuit = new Circuit(targetAddress, failureThreshold, resetTimeout);
 		circuit.handleFailedConnection();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [address=http://someUrl, state=CircuitClosed [failureCount=1], failureThreshold=3, resetTimeout=50]"));
+				is("Circuit [targetAddress=http://someUrl, state=CircuitClosed [failureCount=1], failureThreshold=3, resetTimeout=50]"));
 		circuit.handleSuccesfullConnection();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [address=http://someUrl, state=CircuitClosed [failureCount=0], failureThreshold=3, resetTimeout=50]"));
+				is("Circuit [targetAddress=http://someUrl, state=CircuitClosed [failureCount=0], failureThreshold=3, resetTimeout=50]"));
 
 	}
 
 	@Test
 	public void shouldReturnCirucitsRepresenationAfterExceedingFailureThreshold() {
-		String address = "http://someUrl";
+		String targetAddress = "http://someUrl";
 		long resetTimeout = 50;
 		int failureThreshold = 2;
-		circuit = new Circuit(address, failureThreshold, resetTimeout);
+		circuit = new Circuit(targetAddress, failureThreshold, resetTimeout);
 		circuit.handleFailedConnection();
 		circuit.handleFailedConnection();
-		assertThat(circuit.toString(), containsString("Circuit [address=http://someUrl, state=CircuitOpen"));
+		assertThat(circuit.toString(), containsString("Circuit [targetAddress=http://someUrl, state=CircuitOpen"));
 
 	}
 
 	@Test
 	public void shouldReturnCirucitsRepresenationResetTimeout() throws InterruptedException {
-		String address = "http://someUrlABC";
+		String targetAddress = "http://someUrlABC";
 		long resetTimeout = 50;
 		int failureThreshold = 2;
-		circuit = new Circuit(address, failureThreshold, resetTimeout);
+		circuit = new Circuit(targetAddress, failureThreshold, resetTimeout);
 		circuit.handleFailedConnection();
 		circuit.handleFailedConnection();
 		Thread.sleep(70);
 		circuit.connectionAvailable();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [address=http://someUrlABC, state=CircuitHalfOpen, failureThreshold=2, resetTimeout=50]"));
+				is("Circuit [targetAddress=http://someUrlABC, state=CircuitHalfOpen, failureThreshold=2, resetTimeout=50]"));
 		circuit.handleSuccesfullConnection();
 		assertThat(
 				circuit.toString(),
-				is("Circuit [address=http://someUrlABC, state=CircuitClosed [failureCount=0], failureThreshold=2, resetTimeout=50]"));
+				is("Circuit [targetAddress=http://someUrlABC, state=CircuitClosed [failureCount=0], failureThreshold=2, resetTimeout=50]"));
 
 	}
 
