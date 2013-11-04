@@ -22,7 +22,7 @@ import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.jaceko.circuitbreaker.Circuit;
+import com.github.jaceko.circuitswitcher.Circuit;
 
 public class CircuitSwitcherTargetSelector extends FailoverTargetSelector {
 	private static final Logger LOG = LoggerFactory
