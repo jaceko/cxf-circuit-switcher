@@ -6,7 +6,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import org.apache.cxf.clustering.CircuitBreakerClusteringFeature;
+import org.apache.cxf.clustering.CircuitSwitcherClusteringFeature;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +35,8 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		bean.setAddress("http://dummy:8380");
 	}
 
-	private CircuitBreakerClusteringFeature createCircuitBreakerFeature() {
-		CircuitBreakerClusteringFeature cbff = new CircuitBreakerClusteringFeature();
+	private CircuitSwitcherClusteringFeature createCircuitBreakerFeature() {
+		CircuitSwitcherClusteringFeature cbff = new CircuitSwitcherClusteringFeature();
 		cbff.setAddressList(asList(NODE1_ADDRESS, NODE2_ADDRESS));
 		return cbff;
 	}
@@ -55,7 +55,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Fight Club"));
 		node1Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Chuck Palahniuk"));
 
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 
 		Library library = createJaxrsClient(cbcFeature);
 
@@ -68,7 +68,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Godfather"));
 		node2Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Mario Puzo"));
 
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setAddressList(asList("http://nonexising", NODE2_ADDRESS));
 		cbcFeature.setResetTimeout(100000);
 		
@@ -82,7 +82,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 	
 	@Test
 	public void shouldRetryAndContinueUsingFirstNodeIfFailureThresholdNotExceeded() throws InterruptedException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
@@ -107,7 +107,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 	
 	@Test
 	public void shouldReturnDelayedResponseIfReceiveTimeoutNotExceeded() throws InterruptedException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setResetTimeout(100000);
 		//setting receive timeout to 1.5 sec.
 		cbcFeature.setReceiveTimeout(1500l);
@@ -129,7 +129,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 	
 	@Test
 	public void shouldDiscardFirstNodeIfFailureThresholdExceeded() throws InterruptedException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
@@ -155,7 +155,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test
 	public void shouldFailbackToFirstNodeAfterResetTimeout() throws InterruptedException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		long resetTimeout = 2000;
 		cbcFeature.setResetTimeout(resetTimeout);
@@ -187,7 +187,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		assertThat(library.getAllAuthors().getAuthors().get(0).getName(), is("Roberto Saviano node1"));
 	}
 
-	private Library createJaxrsClient(CircuitBreakerClusteringFeature cbcFeature) {
+	private Library createJaxrsClient(CircuitSwitcherClusteringFeature cbcFeature) {
 		bean.setFeatures(asList(cbcFeature));
 		Library library = bean.create(Library.class);
 		return library;

@@ -11,7 +11,7 @@ import java.io.IOException;
 
 import javax.xml.ws.WebServiceException;
 
-import org.apache.cxf.clustering.CircuitBreakerClusteringFeature;
+import org.apache.cxf.clustering.CircuitSwitcherClusteringFeature;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,8 +41,8 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	}
 
-	private CircuitBreakerClusteringFeature createCircuitBreakerFeature() {
-		CircuitBreakerClusteringFeature cbff = new CircuitBreakerClusteringFeature();
+	private CircuitSwitcherClusteringFeature createCircuitBreakerFeature() {
+		CircuitSwitcherClusteringFeature cbff = new CircuitSwitcherClusteringFeature();
 		cbff.setAddressList(asList(NODE1_ENDPOINT_ADDRESS, NODE2_ENDPOINT_ADDRESS));
 		return cbff;
 	}
@@ -56,7 +56,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 	@Test
 	public void shouldReturnHiResponseRerunedByFirstNode() {
 
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		Greeter greeterClient = createServiceClient(cbcFeature);
 
 		node1Controller.webserviceOperation(sayHiOperation).setUp(sayHiResponse().withResponseText("How you doin"));
@@ -67,7 +67,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 	@Test
 	public void shouldFailoverTo2ndNodeIfFirstNodeNotResponsing() {
 
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setAddressList(asList("http://not-existing.com", NODE1_ENDPOINT_ADDRESS));
 		cbcFeature.setResetTimeout(100000);
 
@@ -80,7 +80,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test
 	public void shouldFailoverTo2ndNodeAfterTimeoutOn1stNode() {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000l);
 		cbcFeature.setReceiveTimeout(800l);
@@ -98,7 +98,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test
 	public void shouldContinueUsingFirstNodeIfFailureThresholdNotExceeded() {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
@@ -121,7 +121,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 	
 	@Test
 	public void shouldFailoverToSecondNodeAfterExceedingFailureThreshold() throws SAXException, IOException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		// setting failure threshold to 2 so it will retry first request to the
 		// 1st node
 		cbcFeature.setFailureThreshold(2);
@@ -150,7 +150,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test
 	public void shouldContinueUsingNode2AfterFailover() throws SAXException, IOException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
@@ -187,7 +187,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test
 	public void shouldFailbackToFirstNodeAfterResetTimeout() throws InterruptedException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		long resetTimeout = 1300;
 		cbcFeature.setResetTimeout(resetTimeout);
@@ -218,7 +218,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test(expected = WebServiceException.class)
 	public void shouldThrowExceptionAfterAllNodesFail() throws SAXException, IOException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
@@ -246,7 +246,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	@Test(expected = WebServiceException.class)
 	public void shouldFailFastAfterAllNodesFail() throws SAXException, IOException {
-		CircuitBreakerClusteringFeature cbcFeature = createCircuitBreakerFeature();
+		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(1);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
@@ -291,7 +291,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	}
 
-	private Greeter createServiceClient(CircuitBreakerClusteringFeature cbcFeature) {
+	private Greeter createServiceClient(CircuitSwitcherClusteringFeature cbcFeature) {
 		bean.setFeatures(asList(cbcFeature));
 		Greeter serviceClient = bean.create(Greeter.class);
 		return serviceClient;

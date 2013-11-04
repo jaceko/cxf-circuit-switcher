@@ -48,10 +48,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 
-public class CircuitBreakerFailoverTargetSelectorTest {
+public class CircuitSwitcherTargetSelectorTest {
 	private static final String ENDPOINT_TRANSPORT_ID = "http://cxf.apache.org/transports/http";
 
-	CircuitBreakerFailoverTargetSelector circuitBreakerTargetSelector = new CircuitBreakerFailoverTargetSelector(
+	CircuitSwitcherTargetSelector circuitBreakerTargetSelector = new CircuitSwitcherTargetSelector(
 			null, 0, 0, null);
 	private Retryable client;
 	private Endpoint ep;
@@ -67,7 +67,7 @@ public class CircuitBreakerFailoverTargetSelectorTest {
 
 	@Test
 	public void shouldRequireFailoverWhereIOExceptionHasBeenThrown() {
-		circuitBreakerTargetSelector = new CircuitBreakerFailoverTargetSelector(null, 0, 0, null);
+		circuitBreakerTargetSelector = new CircuitSwitcherTargetSelector(null, 0, 0, null);
 
 		Exchange exchange = new ExchangeImpl();
 		Message message = new SoapMessage(Soap11.getInstance());

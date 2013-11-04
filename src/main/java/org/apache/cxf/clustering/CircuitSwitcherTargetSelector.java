@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.jaceko.circuitbreaker.Circuit;
 
-public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector {
+public class CircuitSwitcherTargetSelector extends FailoverTargetSelector {
 	private static final Logger LOG = LoggerFactory
-			.getLogger(CircuitBreakerFailoverTargetSelector.class);
+			.getLogger(CircuitSwitcherTargetSelector.class);
 
 	private static final String IS_SELECTED = "org.apache.cxf.clustering.CircuitBreakerTargetSelector.IS_SELECTED";
 
@@ -36,7 +36,7 @@ public class CircuitBreakerFailoverTargetSelector extends FailoverTargetSelector
 
 	private Long receiveTimeout;
 
-	public CircuitBreakerFailoverTargetSelector(List<String> addressList, long resetTimeout,
+	public CircuitSwitcherTargetSelector(List<String> addressList, long resetTimeout,
 			int failureThreshold, Long receiveTimeout) {
 		this.resetTimeout = resetTimeout;
 		this.failureThreshold = failureThreshold;

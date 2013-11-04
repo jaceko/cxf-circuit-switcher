@@ -7,7 +7,7 @@ import org.apache.cxf.endpoint.ConduitSelector;
 import org.apache.cxf.endpoint.Endpoint;
 
 @NoJSR250Annotations
-public class CircuitBreakerClusteringFeature extends FailoverFeature {
+public class CircuitSwitcherClusteringFeature extends FailoverFeature {
 
 	private List<String> addressList;
 	private long resetTimeout;
@@ -16,13 +16,13 @@ public class CircuitBreakerClusteringFeature extends FailoverFeature {
 
 	@Override
 	public FailoverTargetSelector getTargetSelector() {
-		return new CircuitBreakerFailoverTargetSelector(addressList, resetTimeout,
+		return new CircuitSwitcherTargetSelector(addressList, resetTimeout,
 				failureThreshold, receiveTimeout);
 	}
 
 	@Override
 	protected ConduitSelector initTargetSelector(Endpoint endpoint) {
-		CircuitBreakerFailoverTargetSelector selector = (CircuitBreakerFailoverTargetSelector) getTargetSelector();
+		CircuitSwitcherTargetSelector selector = (CircuitSwitcherTargetSelector) getTargetSelector();
 		selector.setEndpoint(endpoint);
 		return selector;
 	}
