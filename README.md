@@ -65,7 +65,7 @@ cbcFeature.setReceiveTimeout(600000l);
 SomeServiceInterface serviceClient = bean.create(SomeServiceInterface.class);
 ```
 ### Thread safety
-CircuitSwitcherClusteringFeature is an extension of a standard Apache's FailoverFeature and as stated by CXF's javadoc this makes the client *not thread safe.* 
+CircuitSwitcherClusteringFeature is an extension of a standard Apache's FailoverFeature and as stated by CXF's javadoc this makes the client **not thread safe**. 
 One of solutions is one suggested by Tomasz Nurkiewicz in his in his [blog post](http://nurkiewicz.blogspot.co.uk/2011/05/enabling-load-balancing-and-failover-in.html). Tomasz's idea is to use Spring and wrap the client bean (must be of _prototype_ scope) in a special proxy. Spring will then create an object pool (based on [commons-pool](http://commons.apache.org/pool) library) and create as many bean instances as necessary to keep each bean used by only one thread.
 ```
 <bean id="client" class="org.springframework.aop.framework.ProxyFactoryBean">
