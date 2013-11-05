@@ -11,7 +11,7 @@ The webservice client is configured with one or more target endpoints in the ord
 
 Each of the circuits can be in 3 states: **Closed**, **Open** and **HalfOpen**
 
-When in **Closed** state, each call to the target endpoint is allowed. But each time it fails, a failure counter is incremented, and when the failure counter reaches a configurable _**failureThreshold**_, the circuit moves to the +Open+ state.
+When in **Closed** state, each call to the target endpoint is allowed. But each time it fails, a failure counter is incremented, and when the failure counter reaches a configurable _**failureThreshold**_, the circuit moves to the **Open** state.
 
 When it moves to **Open** state, it starts a timer set to elapse at a configurable _**resetTimeout**_ value. If the timeout has not been reached, each call to the target endpoint is not allowed and next endpoint from the _**addressList**_ is selected or exception is thrown if no more endpoints available.
 
