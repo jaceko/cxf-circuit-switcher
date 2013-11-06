@@ -81,3 +81,17 @@ One of solutions is one suggested by Tomasz Nurkiewicz in his in his [blog post]
 </bean>
 ```
 This means we can tell Spring not to create more than 20 clients in the pool and if the pool is empty (all the beans are currently in use), we should wait no more than 5000ms.
+### Thread safety
+Maven artifact is available in central:
+
+```
+<depencency>
+	<groupId>com.github.jaceko.cxf</groupId>
+	<artifactId>cxf-circuit-switcher</artifactId>
+	<version>1.0</version>
+</depencency>
+```
+
+### Maturity
+The library hasn't been yet production tested but has good unit and integration test coverage. 
+Feel free to report any [issues](https://github.com/jaceko/cxf-circuit-switcher/issues).
