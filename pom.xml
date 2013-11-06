@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.jaceko.cxf</groupId>
 	<artifactId>cxf-circuit-switcher</artifactId>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
