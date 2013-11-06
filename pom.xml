@@ -4,6 +4,32 @@
 	<groupId>com.github.jaceko.cxf</groupId>
 	<artifactId>cxf-circuit-switcher</artifactId>
 	<version>1.0-SNAPSHOT</version>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+	<licenses>
+		<license>
+			<name>The MIT License (MIT)</name>
+			<url>http://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:git:https://github.com/jaceko/cxf-circuit-switcher.git</connection>
+		<developerConnection>scm:git:https://github.com/jaceko/cxf-circuit-switcher.git</developerConnection>
+		<url>https://github.com/jaceko/cxf-circuit-switcher.git</url>
+		<tag>soaprest-mock-service-1.4.0</tag>
+	</scm>
+	<developers>
+		<developer>
+			<id>obarymski</id>
+			<name>Jacek Obarymski</name>
+			<email>jaceko@onet.eu</email>
+		</developer>
+	</developers>
+
 	<properties>
 		<cxf.version>2.7.6</cxf.version>
 		<slf4j.version>1.7.5</slf4j.version>
@@ -163,4 +189,34 @@
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.4</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>
