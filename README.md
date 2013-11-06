@@ -81,7 +81,7 @@ One of solutions is one suggested by Tomasz Nurkiewicz in his in his [blog post]
 </bean>
 ```
 This means we can tell Spring not to create more than 20 clients in the pool and if the pool is empty (all the beans are currently in use), we should wait no more than 5000ms.
-### Thread safety
+### Maven
 Maven artifact is available in central:
 
 ```
