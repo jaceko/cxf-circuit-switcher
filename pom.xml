@@ -17,9 +17,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:git:git@github.com:jaceko/cxf-circuit-switcher.git</connection>
-		<developerConnection>scm:git:git@github.com:jaceko/cxf-circuit-switcher.git</developerConnection>
-		<url>git@github.com:jaceko/cxf-circuit-switcher.git</url>
+		<connection>scm:git:https://github.com/jaceko/cxf-circuit-switcher.git</connection>
+		<developerConnection>scm:git:https://github.com/jaceko/cxf-circuit-switcher.git</developerConnection>
+		<url>https://github.com/jaceko/cxf-circuit-switcher.git</url>
 	</scm>
 	<developers>
 		<developer>
