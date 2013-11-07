@@ -1,6 +1,6 @@
 cxf-circuit-switcher [![Build Status](https://buildhive.cloudbees.com/job/jaceko/job/cxf-circuit-switcher/badge/icon)](https://buildhive.cloudbees.com/job/jaceko/job/cxf-circuit-switcher/)
 ==============================
-CXF Circuit Switcher is an extension of the Apache CXF webservice client. It provides an alternative failover inspired by the [Circuit Breaker design pattern](http://en.wikipedia.org/wiki/Circuit_breaker_design_pattern) and Michael T. Nygard's book _"Release It"_. 
+CXF Circuit Switcher is an extension of the Apache CXF webservice client. It provides a failover feature inspired by the [Circuit Breaker design pattern](http://en.wikipedia.org/wiki/Circuit_breaker_design_pattern) and Michael T. Nygard's book _"Release It"_. 
 The library can be used as a SOAP (JAX-WS) as well REST (JAX-RS) client feature to detect connection errors and redirect client to next available node (failover). After some (defined) time it can attempt to restore connection to a previously discarded node (failback). 
 Ability to failback is a main functional improvement comparing to standard failover feature being part of Apache CXF package. 
 
