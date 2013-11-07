@@ -82,7 +82,7 @@ One of solutions is one suggested by Tomasz Nurkiewicz in his in his [blog post]
 ```
 This means we can tell Spring not to create more than 20 clients in the pool and if the pool is empty (all the beans are currently in use), we should wait no more than 5000ms.
 ### Maven
-Maven artifact is available in central:
+Maven artifact is available in [central](http://search.maven.org/#artifactdetails|com.github.jaceko.cxf|cxf-circuit-switcher|1.0|jar):
 
 ```
 <depencency>
