@@ -93,5 +93,5 @@ Maven artifact is available in [central](http://search.maven.org/#artifactdetail
 ```
 
 ### Maturity
-The library hasn't been yet production tested but has good unit and integration test coverage. 
+The library has been production tested and has good unit and integration test coverage. 
 Feel free to report any [issues](https://github.com/jaceko/cxf-circuit-switcher/issues).
