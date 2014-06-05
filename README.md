@@ -15,7 +15,7 @@ When in **Closed** state, each call to the target endpoint is allowed. But each 
 
 When it moves to **Open** state, it starts a timer set to elapse at a configurable _**resetTimeout**_ value. If the timeout has not been reached, each call to the target endpoint is not allowed and next endpoint from the _**addressList**_ is selected or exception is thrown if no more endpoints available.
 
-When the _resetTimeout_ has been reached, the circuit moves to **HalfOpen** state. In this state we are tentatively calling the target endpoint to check if it's healthy again. This means that the next call to the endpoint is allowed, but if it fails, the circuit immediately switches back to the **Open** state and the timeout period starts again. If the call to the target endpoint while in **HalfOpen** state succeeds, the circuit switches back to the +Closed+ state.
+When the _resetTimeout_ has been reached, the circuit moves to **HalfOpen** state. In this state we are tentatively calling the target endpoint to check if it's healthy again. This means that the next call to the endpoint is allowed, but if it fails, the circuit immediately switches back to the **Open** state and the timeout period starts again. If the call to the target endpoint while in **HalfOpen** state succeeds, the circuit switches back to the **Closed** state.
 
 ### Integration with Apache CXF
 The CXF Circuit Switcher is exposed as Apache CXF's [feature](http://cxf.apache.org/docs/features.html) which is a standard way of adding capabilities to an Apache CXF based client. 
@@ -80,7 +80,7 @@ One of solutions is one I found this [blog post](http://nurkiewicz.blogspot.co.u
         </property>
 </bean>
 ```
-This means we can tell Spring not to create more than 20 clients in the pool and if the pool is empty (all the beans are currently in use), we should wait no more than 5000ms.
+The above snippet means that we tell Spring not to create more than 20 clients in the pool and if the pool is empty (all the beans are currently in use), we should wait no more than 5000ms.
 ### Maven
 Maven artifact is available in [central](http://search.maven.org/#artifactdetails|com.github.jaceko.cxf|cxf-circuit-switcher|1.0|jar):
 
