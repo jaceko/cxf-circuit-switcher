@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/jaceko/cxf-circuit-switcher.svg?branch=master)](https://travis-ci.org/jaceko/cxf-circuit-switcher) 
 cxf-circuit-switcher 
 ==============================
 CXF Circuit Switcher is an extension of the Apache CXF webservice client. It provides a failover feature inspired by the [Circuit Breaker design pattern](http://en.wikipedia.org/wiki/Circuit_breaker_design_pattern) and Michael T. Nygard's book _"Release It"_. 
