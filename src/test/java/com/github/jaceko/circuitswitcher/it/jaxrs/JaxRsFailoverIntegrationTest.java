@@ -1,22 +1,21 @@
 package com.github.jaceko.circuitswitcher.it.jaxrs;
 
-import static com.github.jaceko.circuitswitcher.it.util.mock.AuthorsResponseBuilder.anAuthorsRsponse;
-import static com.github.jaceko.circuitswitcher.it.util.mock.BooksResponseBuilder.aBooksRsponse;
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
+import com.github.jaceko.circuitswitcher.it.AbstractIntegrationTest;
+import com.github.jaceko.circuitswitcher.it.jaxrs.client.Library;
+import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceMockControler;
+import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceOperation;
 import org.apache.cxf.clustering.CircuitSwitcherClusteringFeature;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.jaceko.circuitswitcher.it.AbstractIntegrationTest;
-import com.github.jaceko.circuitswitcher.it.jaxrs.client.Library;
-import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceMockControler;
-import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceOperation;
+import static com.github.jaceko.circuitswitcher.it.util.mock.AuthorsResponseBuilder.anAuthorsRsponse;
+import static com.github.jaceko.circuitswitcher.it.util.mock.BooksResponseBuilder.aBooksRsponse;
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
 
-public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
+public class JaxRsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	private static final String NODE1_ADDRESS = "http://localhost:9090";
 	private static final String NODE2_ADDRESS = "http://localhost:9191";
@@ -29,7 +28,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 
 	JAXRSClientFactoryBean bean;
 
-	public JaxrsFailoverIntegrationTest() {
+	public JaxRsFailoverIntegrationTest() {
 		bean = new JAXRSClientFactoryBean();
 		bean.setResourceClass(Library.class);
 		bean.setAddress("http://dummy:8380");
@@ -71,7 +70,7 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setAddressList(asList("http://nonexising", NODE2_ADDRESS));
 		cbcFeature.setResetTimeout(100000);
-		
+
 
 		Library library = createJaxrsClient(cbcFeature);
 
@@ -79,14 +78,14 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Godfather"));
 
 	}
-	
+
 	@Test
 	public void shouldRetryAndContinueUsingFirstNodeIfFailureThresholdNotExceeded() throws InterruptedException {
 		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
-		
+
 
 		Library library = createJaxrsClient(cbcFeature);
 
@@ -94,46 +93,46 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out1").withResponseDelaySec(2));
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out2").withResponseDelaySec(2));
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node1"));
-		
+
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra2 node1"));
-		
+
 		//retries twice and finally gets successful response from node1
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node1"));
-		
+
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra2 node1"));
 
 
 	}
-	
+
 	@Test
 	public void shouldReturnDelayedResponseIfReceiveTimeoutNotExceeded() throws InterruptedException {
 		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setResetTimeout(100000);
 		//setting receive timeout to 1.5 sec.
 		cbcFeature.setReceiveTimeout(1500l);
-		
+
 
 		Library library = createJaxrsClient(cbcFeature);
 
 		// delaying response for 1 sec.
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Delayed response node1").withResponseDelaySec(1));
-		
+
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("2nd response node1"));
-		
+
 		//retries twice and finally gets successful response from node1
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Delayed response node1"));
-		
+
 
 	}
 
-	
+
 	@Test
 	public void shouldDiscardFirstNodeIfFailureThresholdExceeded() throws InterruptedException {
 		CircuitSwitcherClusteringFeature cbcFeature = createCircuitBreakerFeature();
 		cbcFeature.setFailureThreshold(3);
 		cbcFeature.setResetTimeout(100000);
 		cbcFeature.setReceiveTimeout(800l);
-		
+
 
 		Library library = createJaxrsClient(cbcFeature);
 
@@ -141,12 +140,12 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out1").withResponseDelaySec(2));
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out2").withResponseDelaySec(2));
 		node1Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("timed out3").withResponseDelaySec(2));
-		
-		
+
+
 		node2Controller.webserviceOperation(booksGETOperation).setUp(aBooksRsponse().withBookTitle("Gomorra node2"));
 		node2Controller.webserviceOperation(authorsGETOperation).setUp(anAuthorsRsponse().withAuthorName("Roberto Saviano node2"));
 
-		
+
 		assertThat(library.getAllBooks().getBooks().get(0).getTitle(), is("Gomorra node2"));
 		assertThat(library.getAllAuthors().getAuthors().get(0).getName(), is("Roberto Saviano node2"));
 
@@ -193,5 +192,5 @@ public class JaxrsFailoverIntegrationTest extends AbstractIntegrationTest {
 		return library;
 	}
 
-	
+
 }

@@ -1,14 +1,16 @@
 package com.github.jaceko.circuitswitcher.it.util.mock;
 
-import java.io.IOException;
-
+import com.github.jaceko.circuitswitcher.it.util.xml.XmlParser;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.github.jaceko.circuitswitcher.it.util.xml.XmlParser;
+import java.io.IOException;
 
 public class WebserviceMockControler {
+	private static final Logger LOG = LoggerFactory.getLogger(WebserviceMockControler.class);
 
 	private MockService mockServiceProxy;
 
@@ -42,7 +44,11 @@ public class WebserviceMockControler {
 		}
 
 		public void init() {
-			mockServiceProxy.init(serviceType, mockedOperation.getServiceName(), mockedOperation.getOperationId());
+			try {
+				mockServiceProxy.init(serviceType, mockedOperation.getServiceName(), mockedOperation.getOperationId());
+			} catch (Throwable e) {
+				LOG.warn("mock init failed: " + e);
+			}
 		}
 
 		public Document recordedRequests() throws SAXException, IOException {

@@ -1,16 +1,9 @@
 package com.github.jaceko.circuitswitcher.it.jaxws;
 
-import static com.github.jaceko.circuitswitcher.it.util.mock.SayHiResponseBuilder.sayHiResponse;
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasXPath;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.IOException;
-
-import javax.xml.ws.WebServiceException;
-
+import com.github.jaceko.circuitswitcher.it.AbstractIntegrationTest;
+import com.github.jaceko.circuitswitcher.it.jaxws.client.hello_world_soap_http.Greeter;
+import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceMockControler;
+import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceOperation;
 import org.apache.cxf.clustering.CircuitSwitcherClusteringFeature;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.junit.Before;
@@ -18,10 +11,15 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.github.jaceko.circuitswitcher.it.AbstractIntegrationTest;
-import com.github.jaceko.circuitswitcher.it.jaxws.client.hello_world_soap_http.Greeter;
-import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceMockControler;
-import com.github.jaceko.circuitswitcher.it.util.mock.WebserviceOperation;
+import javax.xml.ws.WebServiceException;
+import java.io.IOException;
+
+import static com.github.jaceko.circuitswitcher.it.util.mock.SayHiResponseBuilder.sayHiResponse;
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasXPath;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
 
 public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 
@@ -209,7 +207,7 @@ public class JaxwsFailoverIntegrationTest extends AbstractIntegrationTest {
 		assertThat(greeterClient.sayHi(), is("Heyah ho node2 speaking!"));
 
 		// waiting till failover reset timeout elapses
-		Thread.sleep(resetTimeout + 100);
+		Thread.sleep(resetTimeout + 300);
 
 		// failback, node1 is healthy again
 		assertThat(greeterClient.sayHi(), is("Heyah node1 speaking!"));

@@ -18,7 +18,6 @@ public abstract class AbstractIntegrationTest {
 		LOG.info("starting mock servers");
 		mockServerProcess1 = MockServer.startNewProcess("9090");
 		mockServerProcess2 = MockServer.startNewProcess("9191");
-		
 	}
 
 	@AfterClass
