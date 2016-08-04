@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Cxf-circuit-switcher by jaceko</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Cxf-circuit-switcher</h1>
+      <h2 class="project-tagline">Failover feature for Apache CXF webservice client. Contains failback (failover recovery).</h2>
+      <a href="https://github.com/jaceko/cxf-circuit-switcher" class="btn">View on GitHub</a>
+      <a href="https://github.com/jaceko/cxf-circuit-switcher/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/jaceko/cxf-circuit-switcher/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h3>
+<a id="cxf-circuit-switcher" class="anchor" href="#cxf-circuit-switcher" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>CXF Circuit Switcher</h3>
+
+<p>CXF Circuit Switcher is an extension of the Apache CXF webservice client. It provides a failover feature inspired by the <a href="http://en.wikipedia.org/wiki/Circuit_breaker_design_pattern">Circuit Breaker design pattern</a> and Michael T. Nygard's book <em>"Release It"</em>. 
+The library can be used as a SOAP (JAX-WS) as well REST (JAX-RS) client feature to detect connection errors and redirect client to next available node (failover). After some (defined) time it can attempt to restore connection to a previously discarded node (failback). 
+Ability to failback is a main functional improvement comparing to standard failover feature being part of Apache CXF package. </p>
+
+<p><strong>NOTE: This software is neither endorsed nor created by the Apache Software Foundation</strong></p>
+
+<h3>
+<a id="circuit-switcher" class="anchor" href="#circuit-switcher" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Circuit Switcher</h3>
+
+<p>The webservice client is configured with one or more target endpoints in the order of preference (primary node as the first). The integration to each of remote endpoints is seen a "cicruit" which is watched by a Circuit Switcher and and when things are looking bad (the remote webservice is not responding or response time exceeds configurable <em><strong>receiveTimeout</strong></em>) we back off for some time and try next endpoint (switch to another circuit).</p>
+
+<p>Each of the circuits can be in 3 states: <strong>Closed</strong>, <strong>Open</strong> and <strong>HalfOpen</strong></p>
+
+<p>When in <strong>Closed</strong> state, each call to the target endpoint is allowed. But each time it fails, a failure counter is incremented, and when the failure counter reaches a configurable <em><strong>failureThreshold</strong></em>, the circuit moves to the <strong>Open</strong> state.</p>
+
+<p>When it moves to <strong>Open</strong> state, it starts a timer set to elapse at a configurable <em><strong>resetTimeout</strong></em> value. If the timeout has not been reached, each call to the target endpoint is not allowed and next endpoint from the <em><strong>addressList</strong></em> is selected or exception is thrown if no more endpoints available.</p>
+
+<p>When the <em>resetTimeout</em> has been reached, the circuit moves to <strong>HalfOpen</strong> state. In this state we are tentatively calling the target endpoint to check if it's healthy again. This means that the next call to the endpoint is allowed, but if it fails, the circuit immediately switches back to the <strong>Open</strong> state and the timeout period starts again. If the call to the target endpoint while in <strong>HalfOpen</strong> state succeeds, the circuit switches back to the <strong>Closed</strong> state.</p>
+
+<h3>
+<a id="integration-with-apache-cxf" class="anchor" href="#integration-with-apache-cxf" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Integration with Apache CXF</h3>
+
+<p>The CXF Circuit Switcher is exposed as Apache CXF's <a href="http://cxf.apache.org/docs/features.html">feature</a> which is a standard way of adding capabilities to an Apache CXF based client. 
+All we need to do is instantiate the <em>CircuitSwitcherClusteringFeature</em> class setting addressList, resetTimeout, failureThreshold and receiveTimeout. Next step would be to pass it to a standard Apache CXF org.apache.cxf.jaxws.JaxWsProxyFactoryBean (SOAP) or org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean and create webservice client.</p>
+
+<p><em>Examples:</em></p>
+
+<p>Spring:</p>
+
+<pre><code>&lt;bean id="clientFactory" class="org.apache.cxf.jaxws.JaxWsProxyFactoryBean"&gt;
+    &lt;property name="serviceClass"
+        value="com.github.jaceko.SomeServiceInterface" /&gt;
+    &lt;property name="features"&gt;
+        &lt;util:list&gt;
+            &lt;bean class="org.apache.cxf.clustering.CircuitSwitcherClusteringFeature"&gt;
+                &lt;property name="addressList"&gt;
+                    &lt;list&gt;
+                        &lt;value&gt;http://serverA/endpoint&lt;/value&gt;
+                        &lt;value&gt;http://serverB/endpoint&lt;/value&gt;
+                        &lt;value&gt;http://serverC/endpoint&lt;/value&gt;
+                    &lt;/list&gt;
+                &lt;/property&gt;
+                &lt;property name="resetTimeout" value="10000" /&gt;
+                &lt;property name="failureThreshold" value="3" /&gt;
+                &lt;property name="receiveTimeout" value="600000" /&gt;
+            &lt;/bean&gt;
+        &lt;/util:list&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+&lt;bean id="clientTarget" factory-bean="clientFactory"
+    factory-method="create" scope="prototype" lazy-init="true" /&gt;
+</code></pre>
+
+<p>Code:</p>
+
+<pre><code>JaxWsProxyFactoryBean bean = new JaxWsProxyFactoryBean();
+bean.setServiceClass(SomeServiceInterface.class);
+CircuitSwitcherClusteringFeature cbcFeature = new CircuitSwitcherClusteringFeature();
+List&lt;String&gt; addresses =new ArrayList&lt;String&gt;();
+adresses.add("http://serverA/endpoint");
+adresses.add("http://serverB/endpoint");
+adresses.add("http://serverC/endpoint");
+cbcFeature.setAddressList(adresses);
+cbcFeature.setFailureThreshold(3);
+cbcFeature.setResetTimeout(10000);
+cbcFeature.setReceiveTimeout(600000l);
+SomeServiceInterface serviceClient = bean.create(SomeServiceInterface.class);
+</code></pre>
+
+<h3>
+<a id="thread-safety" class="anchor" href="#thread-safety" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Thread safety</h3>
+
+<p>CircuitSwitcherClusteringFeature is an extension of a standard Apache's FailoverFeature and as stated by CXF's javadoc this makes the client <strong>not thread safe</strong>. 
+One of solutions is one I found this <a href="http://nurkiewicz.blogspot.co.uk/2011/05/enabling-load-balancing-and-failover-in.html">blog post</a>. Basically the idea is to use Spring and wrap the client bean (must be of <em>prototype</em> scope) in a special proxy. Spring will then create an object pool (based on <a href="http://commons.apache.org/pool">commons-pool</a> library) and create as many bean instances as necessary to keep each bean used by only one thread.</p>
+
+<pre><code>&lt;bean id="client" class="org.springframework.aop.framework.ProxyFactoryBean"&gt;
+        &lt;property name="targetSource"&gt;
+            &lt;bean class="org.springframework.aop.target.CommonsPoolTargetSource"&gt;
+                &lt;property name="targetClass"
+                    value="com.github.jaceko.SomeServiceInterface" /&gt;
+                &lt;property name="targetBeanName" value="clientTarget" /&gt;
+                &lt;property name="maxSize" value="20" /&gt;
+                &lt;property name="maxWait" value="5000" /&gt;
+            &lt;/bean&gt;
+        &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<p>The above snippet means that we tell Spring not to create more than 20 clients in the pool and if the pool is empty (all the beans are currently in use), we should wait no more than 5000ms.</p>
+
+<h3>
+<a id="maven" class="anchor" href="#maven" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Maven</h3>
+
+<p>Maven artifact is available in <a href="http://search.maven.org/#artifactdetails%7Ccom.github.jaceko.cxf%7Ccxf-circuit-switcher%7C1.0%7Cjar">central</a>:</p>
+
+<pre><code>&lt;depencency&gt;
+    &lt;groupId&gt;com.github.jaceko.cxf&lt;/groupId&gt;
+    &lt;artifactId&gt;cxf-circuit-switcher&lt;/artifactId&gt;
+    &lt;version&gt;1.0&lt;/version&gt;
+&lt;/depencency&gt;
+</code></pre>
+
+<h3>
+<a id="maturity" class="anchor" href="#maturity" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Maturity</h3>
+
+<p>The library has been production tested and has good unit and integration test coverage. 
+Feel free to report any <a href="https://github.com/jaceko/cxf-circuit-switcher/issues">issues</a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/jaceko/cxf-circuit-switcher">Cxf-circuit-switcher</a> is maintained by <a href="https://github.com/jaceko">jaceko</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
